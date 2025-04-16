@@ -6,7 +6,7 @@ export default {
   schema: "./src/server/db/schema.ts",
   dialect: "sqlite",
   dbCredentials: {
-    url: env.DATABASE_URL,
+    url: env.DB_URL,
+    token: env.AUTH_TOKEN,
   },
-  tablesFilter: ["new-web-kit_*"],
 } satisfies Config;
