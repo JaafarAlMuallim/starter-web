@@ -49,6 +49,7 @@ export default function SignIn() {
         },
         onSuccess: async () => {
           router.push("/");
+          router.refresh();
         },
         onError: (ctx: ErrorContext) => {
           toast.error("Something went wrong", {
@@ -99,7 +100,7 @@ export default function SignIn() {
                   )}
                 />
               ))}
-              <LoadingButton pending={pendingCredentials}>
+              <LoadingButton className="w-full" pending={pendingCredentials}>
                 Sign in
               </LoadingButton>
             </form>

@@ -51,11 +51,13 @@ export default function SignUp() {
             description: "Great!",
           });
           router.push("/");
+          router.refresh();
         },
         onError: (ctx) => {
           toast.error("Something went wrong", {
             description: ctx.error.message ?? "Something went wrong.",
           });
+          console.log(ctx.error);
         },
       },
     );
@@ -102,7 +104,9 @@ export default function SignUp() {
                   )}
                 />
               ))}
-              <LoadingButton pending={pending}>Sign up</LoadingButton>
+              <LoadingButton className="w-full" pending={pending}>
+                Sign up
+              </LoadingButton>
             </form>
           </Form>
           <div className="mt-4 text-center text-sm">

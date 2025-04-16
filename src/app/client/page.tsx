@@ -12,7 +12,6 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 import { run } from "@/lib/utils";
 
 const ViewChirps = () => {

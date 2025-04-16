@@ -1,5 +1,4 @@
 "use client";
-
 import { api } from "@/trpc/react";
 import { useState, useCallback, useEffect } from "react";
 
@@ -33,6 +32,7 @@ export function useLiveChirps() {
         }
       }
       for (const chirp of incoming ?? []) {
+        console.log("CHIRP INCOMING LOOP ", chirp);
         if (chirp) {
           map[chirp.id] = chirp;
         }
@@ -50,7 +50,10 @@ export function useLiveChirps() {
   useEffect(() => {
     const chirps = query.data?.pages.map((page) => page.items).flat();
     addChirp(chirps);
-    utils.chirp.invalidate();
+    // debounce it
+    setTimeout(() => {
+      utils.chirp.invalidate();
+    }, 3000);
   }, [query.data?.pages, addChirp]);
 
   const [lastEventId, setLastEventId] = useState<
@@ -72,6 +75,7 @@ export function useLiveChirps() {
     {
       onData(event) {
         const data = event as unknown as ReturnedEvent;
+        console.log("[WEB] Received event:", data[1]);
         addChirp([data[1]]);
         utils.chirp.invalidate();
       },

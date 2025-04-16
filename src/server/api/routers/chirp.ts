@@ -1,11 +1,11 @@
-import { tracked, TRPCError, type TRPCRouterRecord } from "@trpc/server";
+import { tracked, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 import EventEmitter, { on } from "node:events";
 
-import { protectedProcedure, publicProcedure } from "../trpc";
+import { protectedProcedure } from "../trpc";
 import { eq } from "drizzle-orm";
-import { streamToAsyncIterable } from "../lib/stream-to-async";
 import { chirps, type ReadChirp, type User } from "@/server/db/schema";
+import { streamToAsyncIterable } from "../lib/stream-to-async";
 
 export interface MyEvents {
   add: (data: ReadChirp & { user: User }) => void;
@@ -49,7 +49,7 @@ export const chirpRouter = {
       //};
 
       // adding one chirp, you can add multiple by using [{objects}]
-      const [addedChirp] = await ctx.db
+      const addedChirp = await ctx.db
         .insert(chirps)
         .values({
           userId: ctx.session.user.id,
@@ -59,14 +59,8 @@ export const chirpRouter = {
           id: chirps.id,
         });
 
-      if (!addedChirp)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Chirp Failed to Add",
-        });
-
       const chirpUser = await ctx.db.query.chirps.findFirst({
-        where: eq(chirps.id, addedChirp.id),
+        where: eq(chirps.id, addedChirp[0]?.id!),
         with: {
           user: true,
         },
@@ -74,10 +68,11 @@ export const chirpRouter = {
       const chirp = chirpUser;
 
       ee.emit("add", chirp!);
+      console.log("EVENT EMITTED\n", chirpUser);
       return chirpUser;
     }),
 
-  getChirps: publicProcedure.query(async ({ ctx }) => {
+  getChirps: protectedProcedure.query(async ({ ctx }) => {
     const allChirps = await ctx.db.query.chirps.findMany({
       with: {
         user: true,
@@ -100,7 +95,7 @@ export const chirpRouter = {
       if (Boolean(input.cursor) && input.cursor) {
         cursor = new Date(input.cursor);
       } else {
-        cursor = Date.now();
+        cursor = new Date(Date.now());
       }
 
       const allChirps = await ctx.db.query.chirps.findMany({
@@ -122,7 +117,7 @@ export const chirpRouter = {
         nextCursor,
       };
     }),
-  onAdd: publicProcedure
+  onAdd: protectedProcedure
     .input(
       z.object({
         lastEventId: z.number().nullish(),
@@ -143,6 +138,7 @@ export const chirpRouter = {
       const stream = new ReadableStream<ReadChirp & { user: User }>({
         async start(controller) {
           const onAdd: MyEvents["add"] = (data) => {
+            console.log("CHIRP ON ADD ", data);
             controller.enqueue(data);
           };
           ee.on("add", onAdd);
@@ -151,7 +147,7 @@ export const chirpRouter = {
           };
 
           let lastChirpUpdatedAt = await (async () => {
-            const lastEventId = Number(input.lastEventId);
+            const lastEventId = input.lastEventId;
             if (!lastEventId) return null;
             const itemById = await ctx.db.query.chirps.findFirst({
               where: (fields, ops) => ops.eq(fields.id, lastEventId),
@@ -206,6 +202,7 @@ export const chirpRouter = {
       for await (const chirp of streamToAsyncIterable(stream, {
         signal: signal,
       })) {
+        console.log("CHIRP STREAM YIELDING ", chirp);
         yield tracked(chirp.id.toString(), chirp);
       }
       //function* generatorYield(chirp: ReadChirp & { user: User }) {
