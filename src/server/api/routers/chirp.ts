@@ -125,7 +125,7 @@ export const chirpRouter = {
   onAdd: publicProcedure
     .input(
       z.object({
-        lastEventId: z.string().nullish(),
+        lastEventId: z.number().nullish(),
       }),
     )
     .subscription(async function* ({ ctx, input, signal }) {
