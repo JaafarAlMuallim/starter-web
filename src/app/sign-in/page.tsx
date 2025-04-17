@@ -49,7 +49,6 @@ export default function SignIn() {
         },
         onSuccess: async () => {
           router.push("/");
-          router.refresh();
         },
         onError: (ctx: ErrorContext) => {
           toast.error("Something went wrong", {

@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/form";
 import { CardHeader, CardTitle, Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { env } from "@/env";
 
 export default function SignUp() {
   const [pending, setPending] = useState(false);
@@ -51,7 +50,6 @@ export default function SignUp() {
             description: "Great!",
           });
           router.push("/");
-          router.refresh();
         },
         onError: (ctx) => {
           toast.error("Something went wrong", {
